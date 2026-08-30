@@ -1,69 +1,53 @@
 #!/usr/bin/env bash
 #
-# AgentOS Local Development Launcher
-# Starts both the FastAPI backend (port 8080) and the Angular frontend (port 4200) concurrently.
+# AgentOS — One-Click Local Launcher
+# Starts FastAPI backend (port 8080) and Angular frontend (port 4200) concurrently.
 #
-
 set -e
 
-# Colours
-CYAN='\033[0;36m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m'
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-echo -e "${CYAN}====================================================${NC}"
-echo -e "${GREEN}  🧠 Starting AgentOS Local Development Environment ${NC}"
-echo -e "${CYAN}====================================================${NC}"
-echo ""
+echo "🧠 Starting AgentOS..."
 
-ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
-
-# Trap Ctrl+C to kill child processes cleanly
+# Trap SIGINT to kill background jobs cleanly
 cleanup() {
     echo ""
-    echo -e "${YELLOW}Stopping all AgentOS processes...${NC}"
-    kill 0
+    echo "🛑 Shutting down AgentOS..."
+    kill $(jobs -p) 2>/dev/null || true
     exit 0
 }
 trap cleanup SIGINT SIGTERM EXIT
 
 # 1. Start Backend
-echo -e "${CYAN}[1/2] Starting FastAPI Backend on http://localhost:8080 ...${NC}"
-cd "${ROOT_DIR}/backend"
+echo "🚀 Starting FastAPI Backend on http://localhost:8080..."
+cd "$DIR/backend"
 if [ ! -d "venv" ]; then
-    echo "Creating virtualenv..."
     python3 -m venv venv
     source venv/bin/activate
     pip install -r requirements.txt
 else
     source venv/bin/activate
 fi
-
-# Run Uvicorn in background
-uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload &
+uvicorn app.main:app --reload --port 8080 &
 BACKEND_PID=$!
 
 # Wait briefly for backend to initialize
 sleep 2
 
 # 2. Start Frontend
-echo -e "${CYAN}[2/2] Starting Angular Frontend on http://localhost:4200 ...${NC}"
-cd "${ROOT_DIR}/frontend"
-
+echo "🌐 Starting Angular Frontend on http://localhost:4200..."
+cd "$DIR/frontend"
 if [ ! -d "node_modules" ]; then
-    echo "Installing frontend dependencies..."
     npm install
 fi
+npm start &
+FRONTEND_PID=$!
 
 echo ""
-echo -e "${GREEN}✨ AgentOS is running!${NC}"
-echo -e "   • Frontend:  ${CYAN}http://localhost:4200${NC}"
-echo -e "   • Backend:   ${CYAN}http://localhost:8080${NC}"
-echo -e "   • Swagger UI:${CYAN}http://localhost:8080/docs${NC}"
-echo ""
-echo -e "${YELLOW}Press [Ctrl+C] to stop both servers.${NC}"
+echo "✨ AgentOS is running!"
+echo "   • Frontend: http://localhost:4200"
+echo "   • API Docs: http://localhost:8080/docs"
+echo "   Press Ctrl+C to stop both servers."
 echo ""
 
-# Run Angular dev server with proxy configuration
-npx ng serve --proxy-config proxy.conf.json --port 4200
+wait

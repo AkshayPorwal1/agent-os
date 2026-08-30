@@ -39,21 +39,10 @@ When you give it a task it hasn't seen before, it doesn't guess — it **pauses,
 - Node.js 18+ and npm
 - Python 3.9+
 - A [Gemini API Key](https://aistudio.google.com/app/api-keys)
-- A GCP Project with Firestore enabled (or run locally in in-memory simulation mode)
-- `gcloud` CLI authenticated (if using Cloud Firestore)
+- A GCP Project with Firestore enabled
+- `gcloud` CLI authenticated (`gcloud auth application-default login`)
 
-### One-Click Launch (Recommended)
-
-```bash
-cd agent-os
-export GEMINI_API_KEY="your-api-key-here"  # or configure in backend/.env
-./run_local.sh
-```
-*This starts both the FastAPI backend (`:8080`) and the Angular frontend (`:4200`) concurrently with proxying enabled.*
-
----
-
-### Manual Setup (Alternative)
+### 1. Backend Setup
 
 ```bash
 cd agent-os/backend
