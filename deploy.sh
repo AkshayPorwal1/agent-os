@@ -95,15 +95,11 @@ ok "Docker auth configured for Artifact Registry"
 
 # ─── Build & Push ─────────────────────────────────────────────────────────────
 
-log "Building Docker image..."
+log "Building and pushing container image with Google Cloud Build..."
 
-cd "$(dirname "$0")/backend"
-docker build -t "${IMAGE_NAME}:latest" .
-ok "Docker image built"
-
-log "Pushing to Artifact Registry..."
-docker push "${IMAGE_NAME}:latest"
-ok "Image pushed to ${IMAGE_NAME}:latest"
+cd "$(dirname "$0")"
+gcloud builds submit --tag "${IMAGE_NAME}:latest" .
+ok "Container built and pushed to ${IMAGE_NAME}:latest"
 
 # ─── Deploy to Cloud Run ─────────────────────────────────────────────────────
 
