@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 # ─── Models ──────────────────────────────────────────────────────────────────
 
-PRIMARY_MODEL = "gemini-3.6-flash"
+PRIMARY_MODEL = "gemini-3.5-flash-lite"
 
 # ─── System Prompts ──────────────────────────────────────────────────────────
 
