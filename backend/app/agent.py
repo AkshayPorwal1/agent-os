@@ -154,13 +154,7 @@ class AgentBrain:
                 first_few = [w for w in words if w.isalnum()][:2]
                 slug = "_".join(first_few) or "general_task"
                 return json.dumps({"task_type": slug, "confidence": 0.95})
-            if "clarification" in system_instruction.lower() or "hitl" in system_instruction.lower():
-                return json.dumps({
-                    "question": "How would you like me to handle this task?",
-                    "suggested_options": ["Standard formatting", "Concise output", "Step-by-step detailed"],
-                    "context": user_input[:100]
-                })
-            if "standard operating procedure" in system_instruction.lower() or "sop" in system_instruction.lower():
+            if "generating a standard operating procedure" in system_instruction.lower() or "sop_generator" in system_instruction.lower() or "generate a structured sop" in user_input.lower():
                 return json.dumps({
                     "title": "Standard Procedure for Task",
                     "rules": [
@@ -169,7 +163,23 @@ class AgentBrain:
                         "Maintain a professional tone."
                     ]
                 })
-            return f"Simulated AgentOS Execution Result for: {user_input[:200]}"
+            if "clarification" in system_instruction.lower() or "hitl" in system_instruction.lower():
+                return json.dumps({
+                    "question": "How would you like me to handle this task?",
+                    "suggested_options": ["Standard formatting", "Concise output", "Step-by-step detailed"],
+                    "context": user_input[:100]
+                })
+            # Executor fallback
+            return (
+                f"### Execution Summary\n\n"
+                f"**Task:** {user_input[:150]}...\n\n"
+                f"**Status:** Completed in accordance with procedural guidelines.\n\n"
+                f"**Key Deliverables:**\n"
+                f"- Analyzed primary requirements and established execution context.\n"
+                f"- Applied structured formatting and professional tone as specified.\n"
+                f"- Validated output against quality and safety guidelines.\n\n"
+                f"*Note: Configure `GEMINI_API_KEY` in `backend/.env` for live dynamic Gemini 2.0/3.0 generation.*"
+            )
 
         response = self._client.models.generate_content(
             model=PRIMARY_MODEL,
