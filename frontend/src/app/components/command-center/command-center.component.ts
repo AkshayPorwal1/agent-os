@@ -2,8 +2,6 @@ import { Component, EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
-type TaskCategory = 'all' | 'work' | 'personal';
-
 @Component({
   selector: 'app-command-center',
   standalone: true,
@@ -19,40 +17,11 @@ type TaskCategory = 'all' | 'work' | 'personal';
           </svg>
         </div>
         <div>
-          <h2>Your AI Assistant for Life &amp; Work</h2>
-          <p class="subtitle">Execute professional deliverables, organize personal plans, or ask any question.</p>
+          <h2>Command Center</h2>
+          <p class="subtitle">Give AgentOS any task — it will learn how to handle it.</p>
         </div>
       </div>
 
-      <!-- Mode Selector Tabs -->
-      <div class="mode-tabs">
-        <button
-          type="button"
-          class="mode-tab"
-          [class.active]="selectedMode === 'all'"
-          (click)="setMode('all')"
-        >
-          <span>🌟 All Tasks</span>
-        </button>
-        <button
-          type="button"
-          class="mode-tab"
-          [class.active]="selectedMode === 'work'"
-          (click)="setMode('work')"
-        >
-          <span>💼 Work &amp; Professional</span>
-        </button>
-        <button
-          type="button"
-          class="mode-tab"
-          [class.active]="selectedMode === 'personal'"
-          (click)="setMode('personal')"
-        >
-          <span>🏠 Personal &amp; Life</span>
-        </button>
-      </div>
-
-      <!-- Task Input Bar -->
       <form class="command-input-wrapper" (ngSubmit)="onSubmit()">
         <div class="input-container" [class.focused]="isFocused">
           <input
@@ -60,7 +29,7 @@ type TaskCategory = 'all' | 'work' | 'personal';
             class="command-input"
             [(ngModel)]="taskDescription"
             name="task"
-            [placeholder]="getPlaceholder()"
+            placeholder="e.g., Write a professional email to my team about Q3 results..."
             (focus)="isFocused = true"
             (blur)="isFocused = false"
             [disabled]="isLoading"
@@ -72,7 +41,7 @@ type TaskCategory = 'all' | 'work' | 'personal';
             [disabled]="!taskDescription.trim() || isLoading"
           >
             <span *ngIf="!isLoading" class="btn-content">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                    stroke-linejoin="round">
                 <line x1="22" y1="2" x2="11" y2="13"/>
@@ -82,26 +51,11 @@ type TaskCategory = 'all' | 'work' | 'personal';
             </span>
             <span *ngIf="isLoading" class="btn-content">
               <span class="spinner"></span>
-              Executing...
+              Processing
             </span>
           </button>
         </div>
       </form>
-
-      <!-- Quick Action Starter Pills -->
-      <div class="quick-prompts">
-        <span class="quick-label">Suggestions:</span>
-        <button
-          type="button"
-          class="prompt-pill"
-          *ngFor="let p of currentPrompts"
-          (click)="setPrompt(p.text)"
-          [disabled]="isLoading"
-        >
-          <span class="pill-icon">{{ p.icon }}</span>
-          {{ p.text }}
-        </button>
-      </div>
     </section>
   `,
   styles: [`
@@ -109,7 +63,7 @@ type TaskCategory = 'all' | 'work' | 'personal';
       background: linear-gradient(135deg, rgba(30, 27, 46, 0.95), rgba(20, 18, 35, 0.98));
       border: 1px solid rgba(139, 92, 246, 0.2);
       border-radius: 16px;
-      padding: 24px 28px;
+      padding: 28px 32px;
       backdrop-filter: blur(20px);
       position: relative;
       overflow: hidden;
@@ -129,96 +83,66 @@ type TaskCategory = 'all' | 'work' | 'personal';
       display: flex;
       align-items: center;
       gap: 14px;
-      margin-bottom: 16px;
+      margin-bottom: 20px;
     }
 
     .header-icon {
-      width: 40px;
-      height: 40px;
-      border-radius: 10px;
-      background: linear-gradient(135deg, rgba(139, 92, 246, 0.25), rgba(59, 130, 246, 0.25));
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(59, 130, 246, 0.2));
       display: flex;
       align-items: center;
       justify-content: center;
       color: #a78bfa;
-      flex-shrink: 0;
     }
 
     h2 {
-      font-size: 1.18rem;
+      margin: 0;
+      font-size: 1.2rem;
       font-weight: 600;
-      color: #f1f5f9;
-      margin: 0 0 2px 0;
+      color: #f1f0f5;
+      letter-spacing: -0.01em;
     }
 
     .subtitle {
-      font-size: 0.85rem;
-      color: #94a3b8;
-      margin: 0;
-    }
-
-    .mode-tabs {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 14px;
-      flex-wrap: wrap;
-    }
-
-    .mode-tab {
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      color: #94a3b8;
-      padding: 6px 14px;
-      border-radius: 20px;
+      margin: 2px 0 0;
       font-size: 0.82rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .mode-tab:hover {
-      background: rgba(139, 92, 246, 0.15);
-      color: #e2e8f0;
-    }
-
-    .mode-tab.active {
-      background: linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(59, 130, 246, 0.2));
-      border-color: #8b5cf6;
-      color: #ffffff;
-      font-weight: 600;
+      color: rgba(161, 161, 170, 0.8);
     }
 
     .command-input-wrapper {
-      margin-bottom: 14px;
+      display: flex;
     }
 
     .input-container {
       display: flex;
-      align-items: center;
-      background: rgba(15, 13, 25, 0.9);
-      border: 1.5px solid rgba(139, 92, 246, 0.25);
+      width: 100%;
+      background: rgba(15, 13, 28, 0.7);
+      border: 1px solid rgba(139, 92, 246, 0.15);
       border-radius: 12px;
-      padding: 5px 6px 5px 18px;
-      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow: hidden;
     }
 
     .input-container.focused {
-      border-color: #8b5cf6;
-      box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2), 0 0 20px rgba(139, 92, 246, 0.15);
+      border-color: rgba(139, 92, 246, 0.5);
+      box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1), 0 0 20px rgba(139, 92, 246, 0.05);
     }
 
     .command-input {
       flex: 1;
+      padding: 14px 18px;
       background: transparent;
       border: none;
       outline: none;
-      color: #f8fafc;
+      color: #e4e4e7;
       font-size: 0.95rem;
-      font-family: inherit;
+      font-family: 'Inter', sans-serif;
     }
 
     .command-input::placeholder {
-      color: #64748b;
+      color: rgba(161, 161, 170, 0.5);
     }
 
     .command-input:disabled {
@@ -226,88 +150,50 @@ type TaskCategory = 'all' | 'work' | 'personal';
     }
 
     .submit-btn {
-      background: linear-gradient(135deg, #8b5cf6, #6d28d9);
-      color: #ffffff;
+      padding: 10px 22px;
+      margin: 6px;
+      background: linear-gradient(135deg, #7c3aed, #6d28d9);
+      color: white;
       border: none;
       border-radius: 8px;
-      padding: 10px 18px;
       font-size: 0.88rem;
-      font-weight: 600;
+      font-weight: 500;
+      font-family: 'Inter', sans-serif;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 7px;
       transition: all 0.2s ease;
+      white-space: nowrap;
     }
 
     .submit-btn:hover:not(:disabled) {
-      background: linear-gradient(135deg, #9333ea, #7c3aed);
-      box-shadow: 0 4px 14px rgba(139, 92, 246, 0.4);
+      background: linear-gradient(135deg, #8b5cf6, #7c3aed);
       transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
     }
 
     .submit-btn:disabled {
-      opacity: 0.5;
+      opacity: 0.4;
       cursor: not-allowed;
-      transform: none;
     }
 
     .btn-content {
       display: flex;
       align-items: center;
-      gap: 7px;
-    }
-
-    .quick-prompts {
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .quick-label {
-      font-size: 0.78rem;
-      color: #64748b;
-      font-weight: 500;
-    }
-
-    .prompt-pill {
-      background: rgba(139, 92, 246, 0.08);
-      border: 1px solid rgba(139, 92, 246, 0.18);
-      color: #cbd5e1;
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 0.78rem;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-    }
-
-    .prompt-pill:hover:not(:disabled) {
-      background: rgba(139, 92, 246, 0.2);
-      border-color: rgba(139, 92, 246, 0.4);
-      color: #f1f5f9;
-    }
-
-    .pill-icon {
-      font-size: 0.85rem;
+      gap: 6px;
     }
 
     .spinner {
-      width: 14px;
-      height: 14px;
+      width: 16px;
+      height: 16px;
       border: 2px solid rgba(255, 255, 255, 0.3);
-      border-top-color: #ffffff;
+      border-top-color: white;
       border-radius: 50%;
-      animation: spin 0.7s linear infinite;
+      animation: spin 0.8s linear infinite;
     }
 
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
-  `]
+  `],
 })
 export class CommandCenterComponent {
   @Output() taskSubmitted = new EventEmitter<string>();
@@ -315,50 +201,18 @@ export class CommandCenterComponent {
   taskDescription = '';
   isFocused = false;
   isLoading = false;
-  selectedMode: TaskCategory = 'all';
-
-  allPrompts = [
-    { text: 'Draft a project roadmap with quarterly milestones', icon: '📊', category: 'work' },
-    { text: 'Plan a 4-day trip itinerary to Tokyo with food & sights', icon: '✈️', category: 'personal' },
-    { text: 'Create a 7-day high-protein meal prep plan with grocery list', icon: '🥗', category: 'personal' },
-    { text: 'Write a memo to executive leadership on team progress', icon: '💼', category: 'work' },
-    { text: 'Build a monthly personal savings & budget plan', icon: '💰', category: 'personal' },
-    { text: 'Design a 4-day weekly workout routine for strength', icon: '🏋️', category: 'personal' },
-  ];
-
-  get currentPrompts() {
-    if (this.selectedMode === 'all') return this.allPrompts;
-    return this.allPrompts.filter(p => p.category === this.selectedMode);
-  }
-
-  setMode(mode: TaskCategory): void {
-    this.selectedMode = mode;
-  }
-
-  getPlaceholder(): string {
-    if (this.selectedMode === 'work') {
-      return 'E.g., Draft a status memo, write a code architecture review, create OKRs...';
-    }
-    if (this.selectedMode === 'personal') {
-      return 'E.g., Plan a vacation itinerary, create a meal plan, organize daily budget...';
-    }
-    return 'Ask anything for work or personal life (e.g. Plan a trip, draft a memo, create budget)...';
-  }
 
   onSubmit(): void {
-    const trimmed = this.taskDescription.trim();
-    if (!trimmed || this.isLoading) return;
+    const desc = this.taskDescription.trim();
+    if (!desc) return;
+
     this.isLoading = true;
-    this.taskSubmitted.emit(trimmed);
-    this.taskDescription = '';
+    this.taskSubmitted.emit(desc);
   }
 
+  /** Called by parent when task submission completes. */
   resetState(): void {
+    this.taskDescription = '';
     this.isLoading = false;
-  }
-
-  setPrompt(p: string): void {
-    this.taskDescription = p;
-    this.onSubmit();
   }
 }

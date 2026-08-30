@@ -4,22 +4,28 @@
     <div class="header-content">
       <div class="logo-area">
         <div class="logo-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+          <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24"
                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                stroke-linejoin="round">
-            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            <path d="M12 2a4 4 0 0 0-4 4v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2h-2V6a4 4 0 0 0-4-4z"/>
+            <circle cx="12" cy="15" r="2"/>
           </svg>
         </div>
         <div>
           <h1>AgentOS</h1>
-          <span class="tagline">Intelligent AI Assistant</span>
+          <span class="tagline">Self-Teaching Autonomous Agent</span>
         </div>
       </div>
       <div class="header-badges">
-        <span class="badge online-badge">
-          <span class="badge-dot online"></span>
-          Ready &amp; Online
+        <span class="badge model-badge">
+          <span class="badge-dot gemini"></span>
+          Gemini 3.6 Flash
         </span>
+        <span class="badge model-badge">
+          <span class="badge-dot gemma"></span>
+          Gemma 4 Guardrails
+        </span>
+        <span class="badge track-badge">Track 2 — Collaborative Partner</span>
       </div>
     </div>
   </header>
@@ -32,6 +38,7 @@
 
     <app-task-activity
       [tasks]="tasks"
+      (clarificationSubmitted)="onClarificationSubmitted($event)"
     ></app-task-activity>
 
     <app-memory-vault></app-memory-vault>
@@ -39,6 +46,6 @@
 
   <!-- Footer -->
   <footer class="app-footer">
-    <p>AgentOS &bull; Autonomous AI System</p>
+    <p>Built for the <strong>All Things Agentic Hackathon</strong> on Google Cloud &bull; Powered by Gemini &amp; Firestore</p>
   </footer>
 </div>

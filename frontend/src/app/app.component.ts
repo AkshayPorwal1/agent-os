@@ -31,9 +31,6 @@ export class AppComponent {
       next: (response) => {
         this.tasks = [response, ...this.tasks];
         this.commandCenter.resetState();
-        if (this.memoryVault) {
-          this.memoryVault.loadSops();
-        }
       },
       error: (err) => {
         console.error('Task submission failed:', err);

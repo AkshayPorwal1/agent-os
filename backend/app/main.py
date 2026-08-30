@@ -61,16 +61,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ─── Static Frontend Serving (for Cloud Run production deployment) ────────────
-
-from fastapi.staticfiles import StaticFiles
-
-static_dir = os.environ.get("STATIC_DIR", "/app/static")
-if os.path.exists(static_dir):
-    logger.info("Serving production static frontend from: %s", static_dir)
-    app.mount("/static", StaticFiles(directory=static_dir), name="static")
-
-
 # ─── Singletons ─────────────────────────────────────────────────────────────
 
 gcp_project = os.environ.get("GCP_PROJECT_ID")

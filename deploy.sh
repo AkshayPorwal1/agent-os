@@ -54,9 +54,10 @@ gcloud services enable \
     run.googleapis.com \
     firestore.googleapis.com \
     artifactregistry.googleapis.com \
+    cloudbuild.googleapis.com \
     --quiet
 
-ok "APIs enabled: Cloud Run, Firestore, Artifact Registry"
+ok "APIs enabled: Cloud Run, Firestore, Artifact Registry, Cloud Build"
 
 # ─── Firestore Setup ─────────────────────────────────────────────────────────
 
@@ -89,17 +90,23 @@ else
     ok "Created Artifact Registry repo '${REPO_NAME}'"
 fi
 
-# Configure Docker auth
-gcloud auth configure-docker "${REGION}-docker.pkg.dev" --quiet
-ok "Docker auth configured for Artifact Registry"
-
 # ─── Build & Push ─────────────────────────────────────────────────────────────
 
-log "Building and pushing container image with Google Cloud Build..."
+log "Building and pushing container image..."
 
-cd "$(dirname "$0")"
-gcloud builds submit --tag "${IMAGE_NAME}:latest" .
-ok "Container built and pushed to ${IMAGE_NAME}:latest"
+cd "$(dirname "$0")/backend"
+
+if command -v docker &>/dev/null && docker info &>/dev/null; then
+    gcloud auth configure-docker "${REGION}-docker.pkg.dev" --quiet
+    docker build -t "${IMAGE_NAME}:latest" .
+    ok "Docker image built locally"
+    docker push "${IMAGE_NAME}:latest"
+    ok "Image pushed to ${IMAGE_NAME}:latest"
+else
+    log "Local Docker not running. Using Google Cloud Build (serverless build)..."
+    gcloud builds submit --tag "${IMAGE_NAME}:latest" . --quiet
+    ok "Image built and pushed via Google Cloud Build: ${IMAGE_NAME}:latest"
+fi
 
 # ─── Deploy to Cloud Run ─────────────────────────────────────────────────────
 

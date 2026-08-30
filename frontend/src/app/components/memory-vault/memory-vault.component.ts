@@ -1,10 +1,8 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Subject } from 'rxjs';
+import { Subject, takeUntil } from 'rxjs';
 import { SopItem } from '../../models/agent.model';
 import { AgentService } from '../../services/agent.service';
-
-type FilterCategory = 'all' | 'work' | 'personal';
 
 @Component({
   selector: 'app-memory-vault',
@@ -22,10 +20,10 @@ type FilterCategory = 'all' | 'work' | 'personal';
           </svg>
         </div>
         <div>
-          <h2>Learned Skills &amp; Capabilities</h2>
-          <p class="subtitle">Personal and professional workflows automatically remembered by AgentOS</p>
+          <h2>Memory Vault</h2>
+          <p class="subtitle">Learned Standard Operating Procedures</p>
         </div>
-        <button class="refresh-btn" (click)="loadSops()" [disabled]="isLoading" title="Refresh Skills">
+        <button class="refresh-btn" (click)="loadSops()" [disabled]="isLoading">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                stroke-linejoin="round" [class.spinning]="isLoading">
@@ -36,54 +34,35 @@ type FilterCategory = 'all' | 'work' | 'personal';
         </button>
       </div>
 
-      <!-- Filter Tabs -->
-      <div class="filter-tabs" *ngIf="sops.length > 0">
-        <button
-          type="button"
-          class="filter-pill"
-          [class.active]="selectedCategory === 'all'"
-          (click)="selectedCategory = 'all'"
-        >
-          All ({{ sops.length }})
-        </button>
-        <button
-          type="button"
-          class="filter-pill"
-          [class.active]="selectedCategory === 'work'"
-          (click)="selectedCategory = 'work'"
-        >
-          💼 Work
-        </button>
-        <button
-          type="button"
-          class="filter-pill"
-          [class.active]="selectedCategory === 'personal'"
-          (click)="selectedCategory = 'personal'"
-        >
-          🏠 Personal
-        </button>
+      <div class="empty-state" *ngIf="!isLoading && sops.length === 0">
+        <div class="empty-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"
+               stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+            <line x1="9" y1="9" x2="9.01" y2="9"/>
+            <line x1="15" y1="9" x2="15.01" y2="9"/>
+          </svg>
+        </div>
+        <p class="empty-title">No SOPs learned yet</p>
+        <p class="empty-desc">Submit a task and teach AgentOS how to handle it. The learned procedure will appear here.</p>
       </div>
 
-      <div class="empty-state" *ngIf="!isLoading && filteredSops.length === 0">
-        <p class="empty-desc">No skills match the selected filter. As you run tasks, AgentOS learns and saves them here.</p>
-      </div>
-
-      <div class="sop-grid" *ngIf="filteredSops.length > 0">
-        <div class="sop-card" *ngFor="let sop of filteredSops; trackBy: trackBySopType">
+      <div class="sop-grid" *ngIf="sops.length > 0">
+        <div class="sop-card" *ngFor="let sop of sops; trackBy: trackBySopType">
           <div class="sop-card-header">
-            <div>
-              <span class="category-tag" [class.personal]="isPersonal(sop)">
-                {{ isPersonal(sop) ? '🏠 Personal' : '💼 Work' }}
-              </span>
+            <div class="sop-title-area">
               <h3>{{ sop.title }}</h3>
+              <span class="sop-type">{{ sop.task_type }}</span>
             </div>
             <button
               class="delete-btn"
               (click)="confirmDelete(sop)"
               [disabled]="sop === deletingSop"
-              title="Remove Skill"
+              title="Delete SOP"
             >
-              <svg *ngIf="sop !== deletingSop" xmlns="http://www.w3.org/2000/svg" width="15" height="15"
+              <svg *ngIf="sop !== deletingSop" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                    stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="3 6 5 6 21 6"/>
@@ -93,21 +72,37 @@ type FilterCategory = 'all' | 'work' | 'personal';
             </button>
           </div>
 
-          <ul class="rules-list">
-            <li class="rule" *ngFor="let rule of sop.rules">
-              {{ rule }}
-            </li>
-          </ul>
+          <div class="rules-list">
+            <div class="rule" *ngFor="let rule of sop.rules; let i = index">
+              <span class="rule-number">{{ i + 1 }}</span>
+              <span class="rule-text">{{ rule }}</span>
+            </div>
+          </div>
+
+          <div class="sop-meta">
+            <span class="meta-item">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
+                   fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                   stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+              {{ formatDate(sop.created_at) }}
+            </span>
+            <span class="meta-item">{{ sop.rules.length }} rules</span>
+          </div>
         </div>
       </div>
     </section>
   `,
   styles: [`
     .memory-vault {
-      background: rgba(22, 20, 36, 0.85);
+      background: linear-gradient(135deg, rgba(30, 27, 46, 0.95), rgba(20, 18, 35, 0.98));
       border: 1px solid rgba(139, 92, 246, 0.15);
       border-radius: 16px;
-      padding: 24px 28px;
+      padding: 28px 32px;
       backdrop-filter: blur(20px);
     }
 
@@ -115,200 +110,222 @@ type FilterCategory = 'all' | 'work' | 'personal';
       display: flex;
       align-items: center;
       gap: 12px;
-      margin-bottom: 16px;
+      margin-bottom: 20px;
     }
 
     .header-icon {
       width: 36px;
       height: 36px;
       border-radius: 10px;
-      background: rgba(139, 92, 246, 0.15);
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(34, 197, 94, 0.2));
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #a78bfa;
-      flex-shrink: 0;
+      color: #34d399;
     }
 
     h2 {
-      font-size: 1.15rem;
+      margin: 0;
+      font-size: 1.1rem;
       font-weight: 600;
-      color: #f1f5f9;
-      margin: 0 0 2px 0;
+      color: #f1f0f5;
     }
 
     .subtitle {
-      font-size: 0.83rem;
-      color: #94a3b8;
-      margin: 0;
+      margin: 1px 0 0;
+      font-size: 0.75rem;
+      color: rgba(161, 161, 170, 0.7);
     }
 
     .refresh-btn {
       margin-left: auto;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      color: #94a3b8;
-      width: 32px;
-      height: 32px;
+      width: 34px;
+      height: 34px;
       border-radius: 8px;
+      background: rgba(34, 197, 94, 0.1);
+      border: 1px solid rgba(34, 197, 94, 0.2);
+      color: #34d399;
+      cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all 0.2s;
     }
 
     .refresh-btn:hover:not(:disabled) {
-      background: rgba(139, 92, 246, 0.2);
-      border-color: rgba(139, 92, 246, 0.4);
-      color: #f1f5f9;
+      background: rgba(34, 197, 94, 0.2);
     }
 
     .spinning {
-      animation: spin 0.8s linear infinite;
-    }
-
-    .filter-tabs {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 16px;
-    }
-
-    .filter-pill {
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      color: #94a3b8;
-      padding: 4px 12px;
-      border-radius: 16px;
-      font-size: 0.78rem;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .filter-pill:hover {
-      color: #e2e8f0;
-      background: rgba(139, 92, 246, 0.1);
-    }
-
-    .filter-pill.active {
-      background: rgba(139, 92, 246, 0.25);
-      border-color: #8b5cf6;
-      color: #ffffff;
-      font-weight: 600;
-    }
-
-    .empty-state {
-      text-align: center;
-      padding: 24px 20px;
-      color: #64748b;
-    }
-
-    .empty-desc {
-      font-size: 0.88rem;
-      margin: 0;
-    }
-
-    .sop-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 14px;
-    }
-
-    .sop-card {
-      background: rgba(15, 13, 25, 0.8);
-      border: 1px solid rgba(139, 92, 246, 0.18);
-      border-radius: 12px;
-      padding: 16px;
-      transition: all 0.2s ease;
-    }
-
-    .sop-card:hover {
-      border-color: rgba(139, 92, 246, 0.4);
-      transform: translateY(-1px);
-    }
-
-    .sop-card-header {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 10px;
-      margin-bottom: 10px;
-    }
-
-    .category-tag {
-      display: inline-block;
-      font-size: 0.7rem;
-      font-weight: 600;
-      color: #38bdf8;
-      background: rgba(56, 189, 248, 0.1);
-      border: 1px solid rgba(56, 189, 248, 0.2);
-      padding: 2px 7px;
-      border-radius: 6px;
-      margin-bottom: 6px;
-    }
-
-    .category-tag.personal {
-      color: #34d399;
-      background: rgba(52, 211, 153, 0.1);
-      border-color: rgba(52, 211, 153, 0.2);
-    }
-
-    h3 {
-      font-size: 0.95rem;
-      font-weight: 600;
-      color: #f8fafc;
-      margin: 0;
-      line-height: 1.3;
-    }
-
-    .delete-btn {
-      background: transparent;
-      border: none;
-      color: #64748b;
-      cursor: pointer;
-      padding: 4px;
-      border-radius: 4px;
-      transition: all 0.15s ease;
-    }
-
-    .delete-btn:hover:not(:disabled) {
-      color: #ef4444;
-      background: rgba(239, 68, 68, 0.1);
-    }
-
-    .rules-list {
-      margin: 0;
-      padding-left: 18px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .rule {
-      font-size: 0.83rem;
-      color: #cbd5e1;
-      line-height: 1.4;
-    }
-
-    .spinner {
-      width: 14px;
-      height: 14px;
-      border: 2px solid rgba(239, 68, 68, 0.3);
-      border-top-color: #ef4444;
-      border-radius: 50%;
-      animation: spin 0.7s linear infinite;
+      animation: spin 1s linear infinite;
     }
 
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
-  `]
+
+    /* ─── Empty State ─── */
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    .empty-icon {
+      color: rgba(161, 161, 170, 0.25);
+      margin-bottom: 14px;
+    }
+
+    .empty-title {
+      color: rgba(161, 161, 170, 0.7);
+      font-size: 0.95rem;
+      font-weight: 500;
+      margin: 0 0 6px;
+    }
+
+    .empty-desc {
+      color: rgba(161, 161, 170, 0.5);
+      font-size: 0.82rem;
+      margin: 0;
+      max-width: 360px;
+      margin: 0 auto;
+      line-height: 1.5;
+    }
+
+    /* ─── SOP Grid ─── */
+
+    .sop-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 14px;
+    }
+
+    .sop-card {
+      background: rgba(15, 13, 28, 0.6);
+      border: 1px solid rgba(34, 197, 94, 0.15);
+      border-radius: 12px;
+      padding: 18px;
+      transition: all 0.3s ease;
+    }
+
+    .sop-card:hover {
+      border-color: rgba(34, 197, 94, 0.3);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 20px rgba(34, 197, 94, 0.08);
+    }
+
+    .sop-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 14px;
+    }
+
+    .sop-title-area h3 {
+      margin: 0 0 4px;
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: #f1f0f5;
+    }
+
+    .sop-type {
+      font-size: 0.7rem;
+      color: #a78bfa;
+      font-family: 'JetBrains Mono', monospace;
+      background: rgba(139, 92, 246, 0.1);
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    .delete-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.15);
+      color: #ef4444;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+
+    .delete-btn:hover:not(:disabled) {
+      background: rgba(239, 68, 68, 0.2);
+      border-color: rgba(239, 68, 68, 0.3);
+    }
+
+    /* ─── Rules ─── */
+
+    .rules-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+
+    .rule {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+
+    .rule-number {
+      flex-shrink: 0;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: rgba(34, 197, 94, 0.15);
+      color: #34d399;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.65rem;
+      font-weight: 700;
+      margin-top: 1px;
+    }
+
+    .rule-text {
+      color: #d4d4d8;
+      font-size: 0.82rem;
+      line-height: 1.45;
+    }
+
+    /* ─── Meta ─── */
+
+    .sop-meta {
+      display: flex;
+      gap: 14px;
+      border-top: 1px solid rgba(63, 63, 70, 0.2);
+      padding-top: 10px;
+    }
+
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.7rem;
+      color: rgba(161, 161, 170, 0.5);
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(239, 68, 68, 0.3);
+      border-top-color: #ef4444;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+  `],
 })
 export class MemoryVaultComponent implements OnInit, OnDestroy {
   sops: SopItem[] = [];
-  selectedCategory: FilterCategory = 'all';
   isLoading = false;
   deletingSop: SopItem | null = null;
+
   private destroy$ = new Subject<void>();
 
   constructor(private agentService: AgentService) {}
@@ -322,48 +339,54 @@ export class MemoryVaultComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  get filteredSops(): SopItem[] {
-    if (this.selectedCategory === 'all') return this.sops;
-    if (this.selectedCategory === 'personal') {
-      return this.sops.filter(s => this.isPersonal(s));
-    }
-    return this.sops.filter(s => !this.isPersonal(s));
-  }
-
-  isPersonal(sop: SopItem): boolean {
-    const text = (sop.task_type + ' ' + sop.title).toLowerCase();
-    return text.includes('travel') || text.includes('trip') || text.includes('meal') ||
-           text.includes('nutrition') || text.includes('workout') || text.includes('fitness') ||
-           text.includes('budget') || text.includes('personal');
+  trackBySopType(index: number, sop: SopItem): string {
+    return sop.task_type;
   }
 
   loadSops(): void {
     this.isLoading = true;
-    this.agentService.listSops().subscribe({
-      next: (sops: SopItem[]) => {
-        this.sops = sops;
-        this.isLoading = false;
-      },
-      error: () => {
-        this.isLoading = false;
-      }
-    });
+    this.agentService
+      .listSops()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (sops) => {
+          this.sops = sops;
+          this.isLoading = false;
+        },
+        error: (err) => {
+          console.error('Failed to load SOPs:', err);
+          this.isLoading = false;
+        },
+      });
   }
 
   confirmDelete(sop: SopItem): void {
     this.deletingSop = sop;
-    this.agentService.deleteSop(sop.task_type).subscribe({
-      next: () => {
-        this.sops = this.sops.filter(s => s.task_type !== sop.task_type);
-        this.deletingSop = null;
-      },
-      error: () => {
-        this.deletingSop = null;
-      }
-    });
+    this.agentService
+      .deleteSop(sop.task_type)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.sops = this.sops.filter((s) => s.task_type !== sop.task_type);
+          this.deletingSop = null;
+        },
+        error: (err) => {
+          console.error('Failed to delete SOP:', err);
+          this.deletingSop = null;
+        },
+      });
   }
 
-  trackBySopType(index: number, sop: SopItem): string {
-    return sop.task_type;
+  formatDate(iso: string): string {
+    if (!iso) return 'Unknown';
+    try {
+      return new Date(iso).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      });
+    } catch {
+      return iso;
+    }
   }
 }
