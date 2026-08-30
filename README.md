@@ -8,6 +8,14 @@ When you give it a task it hasn't seen before, it doesn't guess — it **pauses,
 
 ---
 
+## 🎬 Live Demo
+
+![AgentOS Live Demo](agent-os-demo.gif)
+
+*Full HD video recording available at [`agent-os-demo.mp4`](agent-os-demo.mp4).*
+
+---
+
 ## ✨ Key Features
 
 - **🎯 Zero-Shot Task Handling:** Submit any task — from drafting emails to planning events.
