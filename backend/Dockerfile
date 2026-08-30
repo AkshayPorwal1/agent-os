@@ -6,8 +6,9 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
+# Copy application code and frontend build
 COPY app/ ./app/
+COPY static/ ./static/
 
 # Expose Cloud Run port
 EXPOSE 8080

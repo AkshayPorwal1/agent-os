@@ -310,3 +310,13 @@ async def delete_sop(task_type: str):
     except Exception as e:
         logger.error("Failed to delete SOP: %s", e)
         raise HTTPException(status_code=500, detail=f"Failed to delete SOP: {str(e)}")
+
+
+# ─── Serve Built Angular Frontend ───────────────────────────────────────────
+
+from fastapi.staticfiles import StaticFiles
+
+static_path = os.path.join(os.path.dirname(__file__), "..", "static")
+if os.path.exists(static_path):
+    logger.info("Serving Angular frontend from %s", static_path)
+    app.mount("/", StaticFiles(directory=static_path, html=True), name="static")
