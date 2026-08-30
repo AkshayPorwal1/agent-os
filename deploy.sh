@@ -7,6 +7,7 @@ set -euo pipefail
 
 # ─── Configuration ───────────────────────────────────────────────────────────
 
+GCP_PROJECT_ID="${GCP_PROJECT_ID:-agent-os-507119}"
 REGION="${REGION:-us-central1}"
 SERVICE_NAME="agent-os-backend"
 REPO_NAME="agent-os-repo"
