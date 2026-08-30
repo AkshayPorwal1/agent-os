@@ -16,7 +16,7 @@ import { TaskResponse } from '../../models/agent.model';
             <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
           </svg>
         </div>
-        <h2>Activity &amp; Results</h2>
+        <h2>Activity &amp; Completed Deliverables</h2>
         <span class="task-count" *ngIf="tasks.length">{{ tasks.length }}</span>
       </div>
 
@@ -30,7 +30,7 @@ import { TaskResponse } from '../../models/agent.model';
             <line x1="9" y1="21" x2="9" y2="9"/>
           </svg>
         </div>
-        <p class="empty-text">No tasks yet. Enter a task above to see the results here.</p>
+        <p class="empty-text">No tasks executed yet. Choose a prompt above or type your own task!</p>
       </div>
 
       <div class="task-list">
@@ -44,7 +44,10 @@ import { TaskResponse } from '../../models/agent.model';
           <div class="card-header">
             <div class="status-indicator">
               <span class="status-dot"></span>
-              <span class="status-text">{{ task.status === 'COMPLETED' ? 'Completed' : 'Processing...' }}</span>
+              <span class="status-text">{{ task.status === 'COMPLETED' ? 'Completed' : 'Working...' }}</span>
+              <span class="domain-tag" [class.personal]="isPersonalTask(task.description)">
+                {{ isPersonalTask(task.description) ? '🏠 Personal' : '💼 Work' }}
+              </span>
             </div>
             <button
               class="copy-btn"
@@ -58,7 +61,7 @@ import { TaskResponse } from '../../models/agent.model';
                 <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
                 <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
               </svg>
-              <span>Copy</span>
+              <span>Copy Output</span>
             </button>
           </div>
 
@@ -73,7 +76,7 @@ import { TaskResponse } from '../../models/agent.model';
           <!-- Processing State -->
           <div class="working-box" *ngIf="task.status !== 'COMPLETED' && !task.result">
             <span class="pulse-spinner"></span>
-            <span>AgentOS is analyzing and crafting your output...</span>
+            <span>AgentOS is executing and organizing your output...</span>
           </div>
         </div>
       </div>
@@ -125,7 +128,7 @@ import { TaskResponse } from '../../models/agent.model';
 
     .empty-state {
       text-align: center;
-      padding: 40px 20px;
+      padding: 36px 20px;
       color: #64748b;
     }
 
@@ -189,6 +192,22 @@ import { TaskResponse } from '../../models/agent.model';
       color: #94a3b8;
     }
 
+    .domain-tag {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: #38bdf8;
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      padding: 1px 7px;
+      border-radius: 6px;
+    }
+
+    .domain-tag.personal {
+      color: #34d399;
+      background: rgba(52, 211, 153, 0.1);
+      border-color: rgba(52, 211, 153, 0.2);
+    }
+
     .copy-btn {
       background: rgba(255, 255, 255, 0.05);
       border: 1px solid rgba(255, 255, 255, 0.1);
@@ -228,7 +247,7 @@ import { TaskResponse } from '../../models/agent.model';
     .result-text {
       font-family: inherit;
       font-size: 0.92rem;
-      line-height: 1.6;
+      line-height: 1.65;
       color: #e2e8f0;
       white-space: pre-wrap;
       word-break: break-word;
@@ -265,6 +284,14 @@ export class TaskActivityComponent {
 
   trackByTaskId(index: number, task: TaskResponse): string {
     return task.task_id;
+  }
+
+  isPersonalTask(desc: string): boolean {
+    const text = (desc || '').toLowerCase();
+    return text.includes('trip') || text.includes('travel') || text.includes('meal') ||
+           text.includes('food') || text.includes('diet') || text.includes('workout') ||
+           text.includes('gym') || text.includes('fitness') || text.includes('budget') ||
+           text.includes('vacation') || text.includes('personal') || text.includes('habit');
   }
 
   copyResult(text: string, event: Event): void {

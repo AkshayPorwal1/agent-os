@@ -1,8 +1,10 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject } from 'rxjs';
 import { SopItem } from '../../models/agent.model';
 import { AgentService } from '../../services/agent.service';
+
+type FilterCategory = 'all' | 'work' | 'personal';
 
 @Component({
   selector: 'app-memory-vault',
@@ -20,8 +22,8 @@ import { AgentService } from '../../services/agent.service';
           </svg>
         </div>
         <div>
-          <h2>Learned Skills &amp; Memory</h2>
-          <p class="subtitle">Skills and formatting preferences automatically remembered by AgentOS</p>
+          <h2>Learned Skills &amp; Capabilities</h2>
+          <p class="subtitle">Personal and professional workflows automatically remembered by AgentOS</p>
         </div>
         <button class="refresh-btn" (click)="loadSops()" [disabled]="isLoading" title="Refresh Skills">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
@@ -34,14 +36,47 @@ import { AgentService } from '../../services/agent.service';
         </button>
       </div>
 
-      <div class="empty-state" *ngIf="!isLoading && sops.length === 0">
-        <p class="empty-desc">No skills saved yet. As you run tasks, AgentOS learns and saves them here.</p>
+      <!-- Filter Tabs -->
+      <div class="filter-tabs" *ngIf="sops.length > 0">
+        <button
+          type="button"
+          class="filter-pill"
+          [class.active]="selectedCategory === 'all'"
+          (click)="selectedCategory = 'all'"
+        >
+          All ({{ sops.length }})
+        </button>
+        <button
+          type="button"
+          class="filter-pill"
+          [class.active]="selectedCategory === 'work'"
+          (click)="selectedCategory = 'work'"
+        >
+          💼 Work
+        </button>
+        <button
+          type="button"
+          class="filter-pill"
+          [class.active]="selectedCategory === 'personal'"
+          (click)="selectedCategory = 'personal'"
+        >
+          🏠 Personal
+        </button>
       </div>
 
-      <div class="sop-grid" *ngIf="sops.length > 0">
-        <div class="sop-card" *ngFor="let sop of sops; trackBy: trackBySopType">
+      <div class="empty-state" *ngIf="!isLoading && filteredSops.length === 0">
+        <p class="empty-desc">No skills match the selected filter. As you run tasks, AgentOS learns and saves them here.</p>
+      </div>
+
+      <div class="sop-grid" *ngIf="filteredSops.length > 0">
+        <div class="sop-card" *ngFor="let sop of filteredSops; trackBy: trackBySopType">
           <div class="sop-card-header">
-            <h3>{{ sop.title }}</h3>
+            <div>
+              <span class="category-tag" [class.personal]="isPersonal(sop)">
+                {{ isPersonal(sop) ? '🏠 Personal' : '💼 Work' }}
+              </span>
+              <h3>{{ sop.title }}</h3>
+            </div>
             <button
               class="delete-btn"
               (click)="confirmDelete(sop)"
@@ -80,7 +115,7 @@ import { AgentService } from '../../services/agent.service';
       display: flex;
       align-items: center;
       gap: 12px;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
     }
 
     .header-icon {
@@ -133,9 +168,38 @@ import { AgentService } from '../../services/agent.service';
       animation: spin 0.8s linear infinite;
     }
 
+    .filter-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .filter-pill {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #94a3b8;
+      padding: 4px 12px;
+      border-radius: 16px;
+      font-size: 0.78rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .filter-pill:hover {
+      color: #e2e8f0;
+      background: rgba(139, 92, 246, 0.1);
+    }
+
+    .filter-pill.active {
+      background: rgba(139, 92, 246, 0.25);
+      border-color: #8b5cf6;
+      color: #ffffff;
+      font-weight: 600;
+    }
+
     .empty-state {
       text-align: center;
-      padding: 30px 20px;
+      padding: 24px 20px;
       color: #64748b;
     }
 
@@ -169,6 +233,24 @@ import { AgentService } from '../../services/agent.service';
       justify-content: space-between;
       gap: 10px;
       margin-bottom: 10px;
+    }
+
+    .category-tag {
+      display: inline-block;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: #38bdf8;
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      padding: 2px 7px;
+      border-radius: 6px;
+      margin-bottom: 6px;
+    }
+
+    .category-tag.personal {
+      color: #34d399;
+      background: rgba(52, 211, 153, 0.1);
+      border-color: rgba(52, 211, 153, 0.2);
     }
 
     h3 {
@@ -224,6 +306,7 @@ import { AgentService } from '../../services/agent.service';
 })
 export class MemoryVaultComponent implements OnInit, OnDestroy {
   sops: SopItem[] = [];
+  selectedCategory: FilterCategory = 'all';
   isLoading = false;
   deletingSop: SopItem | null = null;
   private destroy$ = new Subject<void>();
@@ -237,6 +320,21 @@ export class MemoryVaultComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  get filteredSops(): SopItem[] {
+    if (this.selectedCategory === 'all') return this.sops;
+    if (this.selectedCategory === 'personal') {
+      return this.sops.filter(s => this.isPersonal(s));
+    }
+    return this.sops.filter(s => !this.isPersonal(s));
+  }
+
+  isPersonal(sop: SopItem): boolean {
+    const text = (sop.task_type + ' ' + sop.title).toLowerCase();
+    return text.includes('travel') || text.includes('trip') || text.includes('meal') ||
+           text.includes('nutrition') || text.includes('workout') || text.includes('fitness') ||
+           text.includes('budget') || text.includes('personal');
   }
 
   loadSops(): void {

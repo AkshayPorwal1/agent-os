@@ -2,6 +2,8 @@ import { Component, EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
+type TaskCategory = 'all' | 'work' | 'personal';
+
 @Component({
   selector: 'app-command-center',
   standalone: true,
@@ -17,11 +19,40 @@ import { FormsModule } from '@angular/forms';
           </svg>
         </div>
         <div>
-          <h2>What would you like to accomplish?</h2>
-          <p class="subtitle">Ask a question, request a draft, analyze information, or give any task.</p>
+          <h2>Your AI Assistant for Life &amp; Work</h2>
+          <p class="subtitle">Execute professional deliverables, organize personal plans, or ask any question.</p>
         </div>
       </div>
 
+      <!-- Mode Selector Tabs -->
+      <div class="mode-tabs">
+        <button
+          type="button"
+          class="mode-tab"
+          [class.active]="selectedMode === 'all'"
+          (click)="setMode('all')"
+        >
+          <span>🌟 All Tasks</span>
+        </button>
+        <button
+          type="button"
+          class="mode-tab"
+          [class.active]="selectedMode === 'work'"
+          (click)="setMode('work')"
+        >
+          <span>💼 Work &amp; Professional</span>
+        </button>
+        <button
+          type="button"
+          class="mode-tab"
+          [class.active]="selectedMode === 'personal'"
+          (click)="setMode('personal')"
+        >
+          <span>🏠 Personal &amp; Life</span>
+        </button>
+      </div>
+
+      <!-- Task Input Bar -->
       <form class="command-input-wrapper" (ngSubmit)="onSubmit()">
         <div class="input-container" [class.focused]="isFocused">
           <input
@@ -29,7 +60,7 @@ import { FormsModule } from '@angular/forms';
             class="command-input"
             [(ngModel)]="taskDescription"
             name="task"
-            placeholder="Type your task here (e.g., Write a memo about quarterly milestones)..."
+            [placeholder]="getPlaceholder()"
             (focus)="isFocused = true"
             (blur)="isFocused = false"
             [disabled]="isLoading"
@@ -41,33 +72,34 @@ import { FormsModule } from '@angular/forms';
             [disabled]="!taskDescription.trim() || isLoading"
           >
             <span *ngIf="!isLoading" class="btn-content">
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                    stroke-linejoin="round">
                 <line x1="22" y1="2" x2="11" y2="13"/>
                 <polygon points="22 2 15 22 11 13 2 9 22 2"/>
               </svg>
-              Run Task
+              Execute
             </span>
             <span *ngIf="isLoading" class="btn-content">
               <span class="spinner"></span>
-              Working...
+              Executing...
             </span>
           </button>
         </div>
       </form>
 
-      <!-- Quick Suggestion Prompts -->
+      <!-- Quick Action Starter Pills -->
       <div class="quick-prompts">
-        <span class="quick-label">Try:</span>
+        <span class="quick-label">Suggestions:</span>
         <button
           type="button"
           class="prompt-pill"
-          *ngFor="let p of quickPrompts"
-          (click)="setPrompt(p)"
+          *ngFor="let p of currentPrompts"
+          (click)="setPrompt(p.text)"
           [disabled]="isLoading"
         >
-          {{ p }}
+          <span class="pill-icon">{{ p.icon }}</span>
+          {{ p.text }}
         </button>
       </div>
     </section>
@@ -97,7 +129,7 @@ import { FormsModule } from '@angular/forms';
       display: flex;
       align-items: center;
       gap: 14px;
-      margin-bottom: 18px;
+      margin-bottom: 16px;
     }
 
     .header-icon {
@@ -113,7 +145,7 @@ import { FormsModule } from '@angular/forms';
     }
 
     h2 {
-      font-size: 1.15rem;
+      font-size: 1.18rem;
       font-weight: 600;
       color: #f1f5f9;
       margin: 0 0 2px 0;
@@ -123,6 +155,37 @@ import { FormsModule } from '@angular/forms';
       font-size: 0.85rem;
       color: #94a3b8;
       margin: 0;
+    }
+
+    .mode-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .mode-tab {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #94a3b8;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .mode-tab:hover {
+      background: rgba(139, 92, 246, 0.15);
+      color: #e2e8f0;
+    }
+
+    .mode-tab.active {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(59, 130, 246, 0.2));
+      border-color: #8b5cf6;
+      color: #ffffff;
+      font-weight: 600;
     }
 
     .command-input-wrapper {
@@ -167,13 +230,13 @@ import { FormsModule } from '@angular/forms';
       color: #ffffff;
       border: none;
       border-radius: 8px;
-      padding: 10px 20px;
-      font-size: 0.9rem;
+      padding: 10px 18px;
+      font-size: 0.88rem;
       font-weight: 600;
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 7px;
       transition: all 0.2s ease;
     }
 
@@ -217,12 +280,19 @@ import { FormsModule } from '@angular/forms';
       font-size: 0.78rem;
       cursor: pointer;
       transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
     }
 
     .prompt-pill:hover:not(:disabled) {
       background: rgba(139, 92, 246, 0.2);
       border-color: rgba(139, 92, 246, 0.4);
       color: #f1f5f9;
+    }
+
+    .pill-icon {
+      font-size: 0.85rem;
     }
 
     .spinner {
@@ -245,13 +315,35 @@ export class CommandCenterComponent {
   taskDescription = '';
   isFocused = false;
   isLoading = false;
+  selectedMode: TaskCategory = 'all';
 
-  quickPrompts = [
-    'Write a memo about quarterly sprint milestones',
-    'Draft a friendly email announcing a new feature launch',
-    'Summarize the top 3 best practices for cloud security',
-    'Create an actionable 5-step checklist for team onboarding',
+  allPrompts = [
+    { text: 'Draft a project roadmap with quarterly milestones', icon: '📊', category: 'work' },
+    { text: 'Plan a 4-day trip itinerary to Tokyo with food & sights', icon: '✈️', category: 'personal' },
+    { text: 'Create a 7-day high-protein meal prep plan with grocery list', icon: '🥗', category: 'personal' },
+    { text: 'Write a memo to executive leadership on team progress', icon: '💼', category: 'work' },
+    { text: 'Build a monthly personal savings & budget plan', icon: '💰', category: 'personal' },
+    { text: 'Design a 4-day weekly workout routine for strength', icon: '🏋️', category: 'personal' },
   ];
+
+  get currentPrompts() {
+    if (this.selectedMode === 'all') return this.allPrompts;
+    return this.allPrompts.filter(p => p.category === this.selectedMode);
+  }
+
+  setMode(mode: TaskCategory): void {
+    this.selectedMode = mode;
+  }
+
+  getPlaceholder(): string {
+    if (this.selectedMode === 'work') {
+      return 'E.g., Draft a status memo, write a code architecture review, create OKRs...';
+    }
+    if (this.selectedMode === 'personal') {
+      return 'E.g., Plan a vacation itinerary, create a meal plan, organize daily budget...';
+    }
+    return 'Ask anything for work or personal life (e.g. Plan a trip, draft a memo, create budget)...';
+  }
 
   onSubmit(): void {
     const trimmed = this.taskDescription.trim();

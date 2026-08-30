@@ -33,7 +33,57 @@ class MemoryVault:
             project: GCP project ID. If None, uses ADC / env default.
         """
         self._project = project
-        self._in_memory_sops: dict[str, dict[str, Any]] = {}
+        now = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        self._in_memory_sops: dict[str, dict[str, Any]] = {
+            "email_drafting": {
+                "task_type": "email_drafting",
+                "title": "Professional & Personal Email Drafting",
+                "category": "work",
+                "rules": [
+                    "Tailor tone to recipient (executive for workplace, friendly for personal).",
+                    "Include a clear subject line and concise executive summary.",
+                    "Use structured bullet points for key details and next steps."
+                ],
+                "created_at": now,
+                "updated_at": now,
+            },
+            "travel_itinerary_planning": {
+                "task_type": "travel_itinerary_planning",
+                "title": "Comprehensive Travel & Trip Itinerary",
+                "category": "personal",
+                "rules": [
+                    "Organize schedule day-by-day with Morning, Afternoon, and Evening blocks.",
+                    "Highlight local culinary recommendations and transit tips.",
+                    "Include essential packing notes and reservation advice."
+                ],
+                "created_at": now,
+                "updated_at": now,
+            },
+            "meal_nutrition_planning": {
+                "task_type": "meal_nutrition_planning",
+                "title": "Personal Nutrition & Meal Prep Planner",
+                "category": "personal",
+                "rules": [
+                    "Outline daily meals (Breakfast, Lunch, Dinner, Snacks) with macro balance.",
+                    "Include a consolidated grocery shopping checklist organized by aisle.",
+                    "Provide time-saving batch cooking preparation tips."
+                ],
+                "created_at": now,
+                "updated_at": now,
+            },
+            "project_roadmap_planning": {
+                "task_type": "project_roadmap_planning",
+                "title": "Strategic Project Roadmap & Execution",
+                "category": "work",
+                "rules": [
+                    "Define key phases, milestone deliverables, and timeline estimates.",
+                    "Identify cross-functional dependencies and potential risk mitigations.",
+                    "Formulate quantifiable success metrics and OKRs."
+                ],
+                "created_at": now,
+                "updated_at": now,
+            }
+        }
         self._in_memory_history: dict[str, dict[str, Any]] = {}
         self._use_in_memory = False
 
