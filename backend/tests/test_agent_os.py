@@ -103,12 +103,12 @@ async def test_full_hitl_learning_loop():
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         # Clear test SOP if it exists
-        memory_vault.delete_sop("quarterly_summary")
+        memory_vault.delete_sop("email_drafting")
 
         # Step 1: Submit new unfamiliar task
         resp1 = await client.post(
             "/api/tasks/submit",
-            json={"description": "Summarize the quarterly engineering milestones"},
+            json={"description": "Write a professional email to my team about sprint planning"},
         )
         assert resp1.status_code == 200
         data1 = resp1.json()
@@ -123,7 +123,7 @@ async def test_full_hitl_learning_loop():
             "/api/tasks/resume",
             json={
                 "task_id": task_id,
-                "user_response": "Include bullet points for key features shipped and metrics gained.",
+                "user_response": "Include bullet points for sprint goals and deadlines.",
             },
         )
         assert resp2.status_code == 200
@@ -141,7 +141,7 @@ async def test_full_hitl_learning_loop():
         # Step 4: Submit another task of the same category -> Should execute immediately!
         resp3 = await client.post(
             "/api/tasks/submit",
-            json={"description": f"Summarize the quarterly finance milestones"},
+            json={"description": "Write a professional email to my team about retro notes"},
         )
         assert resp3.status_code == 200
         data3 = resp3.json()
