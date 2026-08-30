@@ -1,0 +1,26 @@
+{
+  "mcpServers": {
+    "agent-os-filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/Users/akshayporwal/Desktop/Agent Hackathon/agent-os"
+      ]
+    },
+    "agent-os-memory": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-memory"
+      ]
+    },
+    "agent-os-fetch": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-fetch"
+      ]
+    }
+  }
+}
