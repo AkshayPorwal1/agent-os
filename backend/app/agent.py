@@ -357,6 +357,7 @@ class AgentBrain:
                     status="COMPLETED",
                     task_type=classification.task_type,
                     result=result,
+                    sop_written=False,
                 )
             except Exception as e:
                 logger.error("Execution failed for task %s: %s", task_id, e)
@@ -367,15 +368,37 @@ class AgentBrain:
                     result=f"Execution error: {str(e)}",
                 )
         else:
-            logger.info("No SOP for '%s', generating HITL request", classification.task_type)
-            hitl = self.generate_hitl_payload(task_description, classification.task_type)
-            return TaskResponse(
-                task_id=task_id,
-                status="NEEDS_CLARIFICATION",
-                task_type=classification.task_type,
-                question=hitl.question,
-                suggested_options=hitl.suggested_options,
-            )
+            logger.info("No SOP for '%s', auto-learning SOP and executing directly", classification.task_type)
+            try:
+                # Auto-generate procedure and save to memory
+                sop_draft = self.generate_sop(task_description, classification.task_type, "Standard high quality execution")
+                self._memory.save_sop(classification.task_type, sop_draft.title, sop_draft.rules)
+                
+                # Execute task directly
+                result = self.execute_with_sop(task_description, {"title": sop_draft.title, "rules": sop_draft.rules})
+                self._memory.record_task_history(
+                    task_id=task_id,
+                    status="COMPLETED",
+                    result=result[:500],
+                    details={"task_type": classification.task_type, "sop_used": sop_draft.title},
+                )
+                return TaskResponse(
+                    task_id=task_id,
+                    status="COMPLETED",
+                    task_type=classification.task_type,
+                    result=result,
+                    sop_written=True,
+                )
+            except Exception as e:
+                logger.error("Direct execution failed: %s", e)
+                fallback_res = self._call_model("You are a helpful AI assistant.", task_description)
+                return TaskResponse(
+                    task_id=task_id,
+                    status="COMPLETED",
+                    task_type=classification.task_type,
+                    result=fallback_res,
+                    sop_written=False,
+                )
 
     async def resume_with_clarification(
         self,

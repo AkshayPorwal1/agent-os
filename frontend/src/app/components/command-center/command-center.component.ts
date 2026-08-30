@@ -17,8 +17,8 @@ import { FormsModule } from '@angular/forms';
           </svg>
         </div>
         <div>
-          <h2>Command Center</h2>
-          <p class="subtitle">Give AgentOS any task — it will learn how to handle it.</p>
+          <h2>What would you like to accomplish?</h2>
+          <p class="subtitle">Ask a question, request a draft, analyze information, or give any task.</p>
         </div>
       </div>
 
@@ -29,7 +29,7 @@ import { FormsModule } from '@angular/forms';
             class="command-input"
             [(ngModel)]="taskDescription"
             name="task"
-            placeholder="e.g., Write a professional email to my team about Q3 results..."
+            placeholder="Type your task here (e.g., Write a memo about quarterly milestones)..."
             (focus)="isFocused = true"
             (blur)="isFocused = false"
             [disabled]="isLoading"
@@ -47,15 +47,29 @@ import { FormsModule } from '@angular/forms';
                 <line x1="22" y1="2" x2="11" y2="13"/>
                 <polygon points="22 2 15 22 11 13 2 9 22 2"/>
               </svg>
-              Execute
+              Run Task
             </span>
             <span *ngIf="isLoading" class="btn-content">
               <span class="spinner"></span>
-              Processing
+              Working...
             </span>
           </button>
         </div>
       </form>
+
+      <!-- Quick Suggestion Prompts -->
+      <div class="quick-prompts">
+        <span class="quick-label">Try:</span>
+        <button
+          type="button"
+          class="prompt-pill"
+          *ngFor="let p of quickPrompts"
+          (click)="setPrompt(p)"
+          [disabled]="isLoading"
+        >
+          {{ p }}
+        </button>
+      </div>
     </section>
   `,
   styles: [`
@@ -63,7 +77,7 @@ import { FormsModule } from '@angular/forms';
       background: linear-gradient(135deg, rgba(30, 27, 46, 0.95), rgba(20, 18, 35, 0.98));
       border: 1px solid rgba(139, 92, 246, 0.2);
       border-radius: 16px;
-      padding: 28px 32px;
+      padding: 24px 28px;
       backdrop-filter: blur(20px);
       position: relative;
       overflow: hidden;
@@ -83,66 +97,65 @@ import { FormsModule } from '@angular/forms';
       display: flex;
       align-items: center;
       gap: 14px;
-      margin-bottom: 20px;
+      margin-bottom: 18px;
     }
 
     .header-icon {
-      width: 42px;
-      height: 42px;
-      border-radius: 12px;
-      background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(59, 130, 246, 0.2));
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.25), rgba(59, 130, 246, 0.25));
       display: flex;
       align-items: center;
       justify-content: center;
       color: #a78bfa;
+      flex-shrink: 0;
     }
 
     h2 {
-      margin: 0;
-      font-size: 1.2rem;
+      font-size: 1.15rem;
       font-weight: 600;
-      color: #f1f0f5;
-      letter-spacing: -0.01em;
+      color: #f1f5f9;
+      margin: 0 0 2px 0;
     }
 
     .subtitle {
-      margin: 2px 0 0;
-      font-size: 0.82rem;
-      color: rgba(161, 161, 170, 0.8);
+      font-size: 0.85rem;
+      color: #94a3b8;
+      margin: 0;
     }
 
     .command-input-wrapper {
-      display: flex;
+      margin-bottom: 14px;
     }
 
     .input-container {
       display: flex;
-      width: 100%;
-      background: rgba(15, 13, 28, 0.7);
-      border: 1px solid rgba(139, 92, 246, 0.15);
+      align-items: center;
+      background: rgba(15, 13, 25, 0.9);
+      border: 1.5px solid rgba(139, 92, 246, 0.25);
       border-radius: 12px;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      overflow: hidden;
+      padding: 5px 6px 5px 18px;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .input-container.focused {
-      border-color: rgba(139, 92, 246, 0.5);
-      box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1), 0 0 20px rgba(139, 92, 246, 0.05);
+      border-color: #8b5cf6;
+      box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2), 0 0 20px rgba(139, 92, 246, 0.15);
     }
 
     .command-input {
       flex: 1;
-      padding: 14px 18px;
       background: transparent;
       border: none;
       outline: none;
-      color: #e4e4e7;
+      color: #f8fafc;
       font-size: 0.95rem;
-      font-family: 'Inter', sans-serif;
+      font-family: inherit;
     }
 
     .command-input::placeholder {
-      color: rgba(161, 161, 170, 0.5);
+      color: #64748b;
     }
 
     .command-input:disabled {
@@ -150,50 +163,81 @@ import { FormsModule } from '@angular/forms';
     }
 
     .submit-btn {
-      padding: 10px 22px;
-      margin: 6px;
-      background: linear-gradient(135deg, #7c3aed, #6d28d9);
-      color: white;
+      background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+      color: #ffffff;
       border: none;
       border-radius: 8px;
-      font-size: 0.88rem;
-      font-weight: 500;
-      font-family: 'Inter', sans-serif;
+      padding: 10px 20px;
+      font-size: 0.9rem;
+      font-weight: 600;
       cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
       transition: all 0.2s ease;
-      white-space: nowrap;
     }
 
     .submit-btn:hover:not(:disabled) {
-      background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+      background: linear-gradient(135deg, #9333ea, #7c3aed);
+      box-shadow: 0 4px 14px rgba(139, 92, 246, 0.4);
       transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
     }
 
     .submit-btn:disabled {
-      opacity: 0.4;
+      opacity: 0.5;
       cursor: not-allowed;
+      transform: none;
     }
 
     .btn-content {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 7px;
+    }
+
+    .quick-prompts {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .quick-label {
+      font-size: 0.78rem;
+      color: #64748b;
+      font-weight: 500;
+    }
+
+    .prompt-pill {
+      background: rgba(139, 92, 246, 0.08);
+      border: 1px solid rgba(139, 92, 246, 0.18);
+      color: #cbd5e1;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .prompt-pill:hover:not(:disabled) {
+      background: rgba(139, 92, 246, 0.2);
+      border-color: rgba(139, 92, 246, 0.4);
+      color: #f1f5f9;
     }
 
     .spinner {
-      width: 16px;
-      height: 16px;
+      width: 14px;
+      height: 14px;
       border: 2px solid rgba(255, 255, 255, 0.3);
-      border-top-color: white;
+      border-top-color: #ffffff;
       border-radius: 50%;
-      animation: spin 0.8s linear infinite;
+      animation: spin 0.7s linear infinite;
     }
 
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
-  `],
+  `]
 })
 export class CommandCenterComponent {
   @Output() taskSubmitted = new EventEmitter<string>();
@@ -202,17 +246,27 @@ export class CommandCenterComponent {
   isFocused = false;
   isLoading = false;
 
-  onSubmit(): void {
-    const desc = this.taskDescription.trim();
-    if (!desc) return;
+  quickPrompts = [
+    'Write a memo about quarterly sprint milestones',
+    'Draft a friendly email announcing a new feature launch',
+    'Summarize the top 3 best practices for cloud security',
+    'Create an actionable 5-step checklist for team onboarding',
+  ];
 
+  onSubmit(): void {
+    const trimmed = this.taskDescription.trim();
+    if (!trimmed || this.isLoading) return;
     this.isLoading = true;
-    this.taskSubmitted.emit(desc);
+    this.taskSubmitted.emit(trimmed);
+    this.taskDescription = '';
   }
 
-  /** Called by parent when task submission completes. */
   resetState(): void {
-    this.taskDescription = '';
     this.isLoading = false;
+  }
+
+  setPrompt(p: string): void {
+    this.taskDescription = p;
+    this.onSubmit();
   }
 }
