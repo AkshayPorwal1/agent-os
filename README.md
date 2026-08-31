@@ -8,7 +8,9 @@ When you give it a task it hasn't seen before, it doesn't guess — it **pauses,
 
 ---
 
-## 🎬 Live Demo
+## 🎬 Live Demo & Production App
+
+**Live Production URL:** [https://agent-os-backend-wp6j2pjhxa-uc.a.run.app/](https://agent-os-backend-wp6j2pjhxa-uc.a.run.app/)
 
 ![AgentOS Live Demo](agent-os-demo.gif)
 
@@ -135,9 +137,6 @@ agent-os/
 │   ├── Dockerfile
 │   └── .env.example
 ├── frontend/                  # Angular 18 app
-├── SUBMISSION_EXTRAS/
-│   ├── BLOG_POST.md
-│   └── SOCIAL_POSTS.md
 ├── deploy.sh                  # Cloud Run deployment
 ├── ARCHITECTURE.md            # Technical architecture
 └── README.md                  # This file
