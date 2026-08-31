@@ -129,9 +129,20 @@ class MessageResponse(BaseModel):
 # ─── Endpoints ───────────────────────────────────────────────────────────────
 
 
-@app.get("/", response_model=MessageResponse)
-async def root():
+from fastapi.responses import FileResponse
+
+@app.get("/api/health", response_model=MessageResponse)
+async def health():
     """Health check."""
+    return MessageResponse(message="AgentOS API is running. 🧠")
+
+
+@app.get("/")
+async def root():
+    """Serve frontend index.html if available, else health check."""
+    index_file = os.path.join(os.path.dirname(__file__), "..", "static", "index.html")
+    if os.path.exists(index_file):
+        return FileResponse(index_file)
     return MessageResponse(message="AgentOS API is running. 🧠")
 
 
